@@ -1,0 +1,20 @@
+# Build outputs
+bin/
+target/
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+
+# Go cache
+.gocache/
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
