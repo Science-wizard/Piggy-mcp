@@ -10,7 +10,7 @@ go run ./cmd/piggy list
 go run ./cmd/piggy summary
 ```
 
-The default store is `expenses.db` in the current directory. Use `-store` to choose another SQLite database file. On startup, Piggy imports `expenses.json` into an empty SQLite database if that JSON file exists.
+The default store is `expenses.db` in the current directory. Use `-store` to choose another SQLite database file.
 
 ```bash
 go run ./cmd/piggy -store /Users/abhishek/Piggy/mcp/piggy-mcp/expenses.db summary

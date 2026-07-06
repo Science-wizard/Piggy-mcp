@@ -2,7 +2,6 @@ package expenses
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -311,63 +310,6 @@ func (s *Store) Reset(confirm bool) (int64, error) {
 		return 0, err
 	}
 	return result.RowsAffected()
-}
-
-func (s *Store) ImportJSONIfEmpty(path string) (int, error) {
-	path = strings.TrimSpace(path)
-	if path == "" {
-		return 0, nil
-	}
-	if _, err := os.Stat(path); err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return 0, nil
-		}
-		return 0, err
-	}
-	if s.Summary().Count > 0 {
-		return 0, nil
-	}
-
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return 0, err
-	}
-	if strings.TrimSpace(string(content)) == "" {
-		return 0, nil
-	}
-
-	var imported []Expense
-	if err := json.Unmarshal(content, &imported); err != nil {
-		return 0, fmt.Errorf("import JSON expenses: %w", err)
-	}
-
-	tx, err := s.db.Begin()
-	if err != nil {
-		return 0, err
-	}
-	defer tx.Rollback()
-
-	count := 0
-	for _, expense := range imported {
-		valid, err := validateExpense(expense.ID, expense.Description, expense.Amount, expense.Category, expense.Date)
-		if err != nil {
-			continue
-		}
-		if valid.ID == "" {
-			valid.ID = fmt.Sprintf("%d-%d", time.Now().UnixNano(), count)
-		}
-		if _, err := tx.Exec(`
-			INSERT OR IGNORE INTO expenses (id, description, amount, category, date)
-			VALUES (?, ?, ?, ?, ?)
-		`, valid.ID, valid.Description, valid.Amount, valid.Category, valid.Date); err != nil {
-			return 0, err
-		}
-		count++
-	}
-	if err := tx.Commit(); err != nil {
-		return 0, err
-	}
-	return count, nil
 }
 
 func (s *Store) init() error {

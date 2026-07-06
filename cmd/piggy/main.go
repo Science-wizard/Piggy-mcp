@@ -23,7 +23,6 @@ func run(args []string) error {
 	flags := flag.NewFlagSet("piggy", flag.ContinueOnError)
 	flags.SetOutput(os.Stderr)
 	storePath := flags.String("store", "expenses.db", "path to SQLite database file")
-	migrateJSON := flags.String("migrate-json", "expenses.json", "import this JSON file into an empty SQLite database")
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
@@ -33,9 +32,6 @@ func run(args []string) error {
 		return err
 	}
 	defer store.Close()
-	if _, err := store.ImportJSONIfEmpty(*migrateJSON); err != nil {
-		return err
-	}
 
 	remaining := flags.Args()
 	if len(remaining) == 0 || remaining[0] == "mcp" {
