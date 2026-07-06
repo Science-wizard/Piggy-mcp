@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -22,7 +23,7 @@ func main() {
 func run(args []string) error {
 	flags := flag.NewFlagSet("piggy", flag.ContinueOnError)
 	flags.SetOutput(os.Stderr)
-	storePath := flags.String("store", "expenses.db", "path to SQLite database file")
+	storePath := flags.String("store", defaultStorePath(), "path to SQLite database file")
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
@@ -261,4 +262,40 @@ Usage:
 For AI clients, configure the command as:
   bin/piggy -store /absolute/path/to/expenses.db mcp
 `))
+}
+
+func defaultStorePath() string {
+	if value := strings.TrimSpace(os.Getenv("PIGGY_DB_PATH")); value != "" {
+		return value
+	}
+
+	workingDir, err := os.Getwd()
+	if err == nil {
+		if fileExists(filepath.Join(workingDir, "go.mod")) {
+			return filepath.Join(workingDir, "expenses.db")
+		}
+	}
+
+	executable, err := os.Executable()
+	if err != nil {
+		return "expenses.db"
+	}
+	executablePath, err := filepath.EvalSymlinks(executable)
+	if err != nil {
+		executablePath = executable
+	}
+
+	executableDir := filepath.Dir(executablePath)
+	if filepath.Base(executableDir) == "bin" {
+		parent := filepath.Dir(executableDir)
+		if fileExists(filepath.Join(parent, "go.mod")) || fileExists(filepath.Join(parent, "expenses.db")) {
+			return filepath.Join(parent, "expenses.db")
+		}
+	}
+	return filepath.Join(executableDir, "expenses.db")
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }

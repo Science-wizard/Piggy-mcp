@@ -10,7 +10,7 @@ go run ./cmd/piggy list
 go run ./cmd/piggy summary
 ```
 
-The default store is `expenses.db` in the current directory. Use `-store` to choose another SQLite database file.
+The default store is the shared project `expenses.db`. When using `bin/piggy`, the CLI resolves it beside the project root, so Claude MCP and manual CLI commands read/write the same database. Use `-store` or `PIGGY_DB_PATH` only when you intentionally want a different database.
 
 ```bash
 go run ./cmd/piggy -store /Users/abhishek/Piggy/mcp/piggy-mcp/expenses.db summary
